@@ -3,12 +3,16 @@ package com.hmdp;
 import com.hmdp.entity.Shop;
 import com.hmdp.service.impl.ShopServiceImpl;
 import com.hmdp.utils.CacheClient;
+import com.hmdp.utils.RedisIdWorker;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.Resource;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static com.hmdp.utils.RedisConstants.CACHE_SHOP_KEY;
@@ -22,46 +26,34 @@ class HmDianPingApplicationTests {
     @Resource
     private CacheClient cacheClient;
 
+    @Resource
+    private RedisIdWorker redisIdWorker;
+
+    private static final ExecutorService POOL = Executors.newFixedThreadPool(300);
+
     @Test
     void testSaveShop() {
         //shopService.saveShop2Redis(1L,10L);
         Shop shop = shopService.getById(1L);
         cacheClient.setWithLogicalExpiration(CACHE_SHOP_KEY + 1L, shop, 10L, TimeUnit.SECONDS);
     }
-}
-class MD5Utils {
-    /**
-     * MD5加密类
-     * @param str 要加密的字符串
-     * @return    加密后的字符串
-     */
-    public static String code(String str){
-        try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            md.update(str.getBytes());
-            byte[]byteDigest = md.digest();
-            int i;
-            StringBuffer buf = new StringBuffer("");
-            for (int offset = 0; offset < byteDigest.length; offset++) {
-                i = byteDigest[offset];
-                if (i < 0)
-                    i += 256;
-                if (i < 16)
-                    buf.append("0");
-                buf.append(Integer.toHexString(i));
+
+    @Test
+    void testNextId() throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(300);
+        Runnable run = () -> {
+            for (int i = 0; i < 100; i++) {
+                long order = redisIdWorker.nextId("order");
+                System.out.println("order = " + order);
             }
-            //32位加密
-            return buf.toString();
-            // 16位的加密
-            //return buf.toString().substring(8, 24);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            return null;
+            latch.countDown();
+        };
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 300; i++) {
+            POOL.submit(run);
         }
-
-    }
-
-    public static void main(String[] args) {
-        System.out.println(code("123456"));
+        latch.await();
+        long end = System.currentTimeMillis();
+        System.out.println(end - start);
     }
 }
