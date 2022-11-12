@@ -11,10 +11,14 @@ import com.hmdp.service.ISeckillVoucherService;
 import com.hmdp.service.IVoucherOrderService;
 import com.hmdp.utils.RedisIdWorker;
 import com.hmdp.utils.UserHolder;
+import javafx.application.Application;
+import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.core.ApplicationContext;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.aop.framework.AopContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -55,9 +59,15 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     private RedissonClient redissonClient;
 
     /**
+     * 直接注入拿到代理bean
+     */
+    @Autowired
+    private IVoucherOrderService voucherOrderService;
+
+    /**
      * 从 ThreadLocal 获取IVoucherOrderService代理对象
      */
-    private static IVoucherOrderService proxy;
+    private IVoucherOrderService proxy;
 
     /**
      * 秒杀订单线程池
@@ -188,7 +198,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         }
         try {
             // 代理创建订单(事务)
-            proxy.createVoucherOrder(voucherOrder);
+            voucherOrderService.createVoucherOrder(voucherOrder);
         } finally {
             lock.unlock();
         }
@@ -206,13 +216,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     }
     @Override
     public Result seckillVoucher(Long voucherId) {
-        //0.获取 Aop 代理类，防止事务失效
-        proxy = (IVoucherOrderService) AopContext.currentProxy();
-
         Long userId = UserHolder.getUser().getId();
         long orderId = redisIdWorker.nextId("order:voucher");
         long nowTime = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
-
         //1.执行lua脚本
         Long result = stringRedisTemplate
                 .execute(SECKILL_SCRIPT,
@@ -224,7 +230,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             //2.1.不为零
             return Result.fail(SeckillResultEnum.getMessageByResult(r));
         }
-        //3.为零返回订单号
+        //3.获取 Aop 代理类，防止事务失效
+        //proxy = (IVoucherOrderService) AopContext.currentProxy();
+        //4.为零返回订单号
         return Result.ok(orderId);
     }
 
