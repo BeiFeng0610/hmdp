@@ -53,9 +53,11 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         seckillVoucher.setStock(voucher.getStock());
         seckillVoucher.setBeginTime(voucher.getBeginTime());
         seckillVoucher.setEndTime(voucher.getEndTime());
-        seckillVoucherService.save(seckillVoucher);
-        stringRedisTemplate.opsForValue().set(SECKILL_STOCK_KEY + voucher.getId(), voucher.getStock().toString());
-        stringRedisTemplate.opsForValue().set(SECKILL_BEGIN_TIME_KEY + voucher.getId(), String.valueOf(voucher.getBeginTime().toEpochSecond(ZoneOffset.UTC)));
-        stringRedisTemplate.opsForValue().set(SECKILL_END_TIME_KEY + voucher.getId(), String.valueOf(voucher.getEndTime().toEpochSecond(ZoneOffset.UTC)));
+        boolean isSuccess = seckillVoucherService.save(seckillVoucher);
+        if (isSuccess) {
+            stringRedisTemplate.opsForValue().set(SECKILL_STOCK_KEY + voucher.getId(), voucher.getStock().toString());
+            stringRedisTemplate.opsForValue().set(SECKILL_BEGIN_TIME_KEY + voucher.getId(), String.valueOf(voucher.getBeginTime().toEpochSecond(ZoneOffset.UTC)));
+            stringRedisTemplate.opsForValue().set(SECKILL_END_TIME_KEY + voucher.getId(), String.valueOf(voucher.getEndTime().toEpochSecond(ZoneOffset.UTC)));
+        }
     }
 }

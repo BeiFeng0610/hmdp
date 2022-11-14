@@ -9,7 +9,7 @@ import javax.servlet.http.HttpSession;
 
 /**
  * <p>
- *  服务类
+ * 服务类
  * </p>
  *
  * @author borei
@@ -19,6 +19,7 @@ public interface IUserService extends IService<User> {
 
     /**
      * 发生短信验证码
+     *
      * @param phone
      * @param session
      * @return
@@ -27,9 +28,30 @@ public interface IUserService extends IService<User> {
 
     /**
      * 用户登录
+     *
      * @param loginForm
      * @param session
      * @return
      */
     Result login(LoginFormDTO loginForm, HttpSession session);
+
+    /**
+     * 用户登出
+     *
+     * @return
+     */
+    Result logout();
+
+    /**
+     * 用户签到
+     *
+     * @return
+     */
+    Result sign();
+
+    /**
+     * 本月连续签到天数
+     * @return
+     */
+    Result signCount();
 }

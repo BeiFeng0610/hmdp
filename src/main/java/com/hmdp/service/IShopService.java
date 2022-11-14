@@ -1,12 +1,12 @@
 package com.hmdp.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.hmdp.dto.Result;
 import com.hmdp.entity.Shop;
-import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
  * <p>
- *  服务类
+ * 服务类
  * </p>
  *
  * @author borei
@@ -16,6 +16,7 @@ public interface IShopService extends IService<Shop> {
 
     /**
      * 根据id查询店铺
+     *
      * @param id
      * @return
      */
@@ -23,8 +24,20 @@ public interface IShopService extends IService<Shop> {
 
     /**
      * 更新店铺信息
+     *
      * @param shop
      * @return
      */
     Result updateShop(Shop shop);
+
+    /**
+     * 根据类型查找店铺
+     *
+     * @param typeId
+     * @param current
+     * @param x
+     * @param y
+     * @return
+     */
+    Result queryShopByType(Integer typeId, Integer current, Double x, Double y);
 }
