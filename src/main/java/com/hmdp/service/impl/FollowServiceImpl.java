@@ -113,4 +113,28 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
                 .collect(Collectors.toList());
         return Result.ok(users);
     }
+
+    @Override
+    public Result testRedis() {
+        String key1 = FOLLOWS_KEY + "1010";
+        String key2 = FOLLOWS_KEY + "2";
+        Set<String> intersect = stringRedisTemplate.opsForSet().intersect(key1, key2);
+        List<Long> ids = intersect.stream().map(Long::valueOf).collect(Collectors.toList());
+        List<UserDTO> users = userService.listByIds(ids)
+                .stream().map(user -> BeanUtil.copyProperties(user, UserDTO.class))
+                .collect(Collectors.toList());
+        return Result.ok(users);
+    }
+
+    @Override
+    public Result testMysql() {
+        long id1 = 1010;
+        long id2 = 2;
+        List<String> list = baseMapper.followCommons(id1, id2);
+        List<Long> ids = list.stream().map(Long::valueOf).collect(Collectors.toList());
+        List<UserDTO> users = userService.listByIds(ids)
+                .stream().map(user -> BeanUtil.copyProperties(user, UserDTO.class))
+                .collect(Collectors.toList());
+        return Result.ok(users);
+    }
 }

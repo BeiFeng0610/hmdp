@@ -4,6 +4,7 @@ package com.hmdp.controller;
 import com.hmdp.dto.Result;
 import com.hmdp.service.IFollowService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.annotation.Resource;
 
@@ -37,8 +38,19 @@ public class FollowController {
         return followService.followCommons(id);
     }
 
+    @RequestMapping
     @GetMapping("/me")
     public Result myFollows() {
         return followService.myFollows();
+    }
+
+    @GetMapping("/redis")
+    public Result testRedis(){
+        return followService.testRedis();
+    }
+
+    @GetMapping("/mysql")
+    public Result testMysql(){
+        return followService.testMysql();
     }
 }

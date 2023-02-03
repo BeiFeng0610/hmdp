@@ -45,4 +45,8 @@ public interface IFollowService extends IService<Follow> {
      * @return
      */
     Result myFollows();
+
+    Result testRedis();
+
+    Result testMysql();
 }

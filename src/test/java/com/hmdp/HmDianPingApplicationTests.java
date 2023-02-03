@@ -1,6 +1,16 @@
 package com.hmdp;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.lang.UUID;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
+import com.hmdp.dto.UserDTO;
+import com.hmdp.entity.Follow;
 import com.hmdp.entity.Shop;
+import com.hmdp.mapper.FollowMapper;
+import com.hmdp.service.IFollowService;
+import com.hmdp.service.IUserService;
+import com.hmdp.service.impl.FollowServiceImpl;
 import com.hmdp.service.impl.ShopServiceImpl;
 import com.hmdp.utils.CacheClient;
 import com.hmdp.utils.RedisIdWorker;
@@ -10,25 +20,29 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.domain.geo.GeoLocation;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.hmdp.utils.RedisConstants.CACHE_SHOP_KEY;
-import static com.hmdp.utils.RedisConstants.SHOP_GEO_KEY;
+import static com.hmdp.utils.RedisConstants.*;
 
 @SpringBootTest
 class HmDianPingApplicationTests {
 
     @Resource
     private ShopServiceImpl shopService;
+    @Resource
+    private IFollowService followService;
+    @Resource
+    private IUserService userService;
+    @Resource
+    private FollowMapper followMapper;
 
     @Resource
     private CacheClient cacheClient;
@@ -103,4 +117,70 @@ class HmDianPingApplicationTests {
         System.out.println("count = " + uv1);
     }
 
+
+    @Test
+    void testStrMem(){
+        Map<String, String> map = new HashMap<>(1000);
+        int count = 1;
+        for (int i = 0; i < 1000000; i++) {
+            int j = i % 1000;
+            String mapKey = "str:" + i;
+            String val = UUID.randomUUID().toString(true);
+            map.put(mapKey, val);
+            if (j == 999) {
+                String key = "test:mem:str:" + count;
+                stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(map));
+                count++;
+                map.clear();
+            }
+        }
+    }
+
+    @Test
+    void testHashMem(){
+        Map<String, String> map = new HashMap<>(1000);
+        int count = 1;
+        for (int i = 0; i < 1000000; i++) {
+            int j = i % 1000;
+            String mapKey = "has:" + i;
+            String val = UUID.randomUUID().toString(true);
+            map.put(mapKey, val);
+            if (j == 999) {
+                String key = "test:mem:has:" + count;
+                stringRedisTemplate.opsForHash().putAll(key, map);
+                count++;
+                map.clear();
+            }
+        }
+    }
+
+    @Test
+    void testFollowByRedis() {
+        String key1 = FOLLOWS_KEY + "1010";
+        String key2 = FOLLOWS_KEY + "2";
+        long start = System.currentTimeMillis();
+        Set<String> intersect = stringRedisTemplate.opsForSet().intersect(key1, key2);
+        List<Long> ids = intersect.stream().map(Long::valueOf).collect(Collectors.toList());
+        List<UserDTO> users = userService.listByIds(ids)
+                .stream().map(user -> BeanUtil.copyProperties(user, UserDTO.class))
+                .collect(Collectors.toList());
+        long end = System.currentTimeMillis();
+        System.out.println(end - start + "ms");
+        users.forEach(System.out::println);
+    }
+
+    @Test
+    void testFollowByMySQL() {
+        long id1 = 1010;
+        long id2 = 2;
+        long start = System.currentTimeMillis();
+        List<String> list = followMapper.followCommons(id1, id2);
+        List<Long> ids = list.stream().map(Long::valueOf).collect(Collectors.toList());
+        List<UserDTO> users = userService.listByIds(ids)
+                .stream().map(user -> BeanUtil.copyProperties(user, UserDTO.class))
+                .collect(Collectors.toList());
+        long end = System.currentTimeMillis();
+        System.out.println(end - start + "ms");
+        users.forEach(System.out::println);
+    }
 }
