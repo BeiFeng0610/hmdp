@@ -2,14 +2,19 @@ package com.hmdp.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.hmdp.constants.SeckillOrderMQConstants;
 import com.hmdp.dto.Result;
+import com.hmdp.dto.SeckillOrderDTO;
 import com.hmdp.entity.VoucherOrder;
 import com.hmdp.entity.enums.SeckillResultEnum;
 import com.hmdp.mapper.VoucherOrderMapper;
 import com.hmdp.service.ISeckillVoucherService;
 import com.hmdp.service.IVoucherOrderService;
+import com.hmdp.utils.MQClient;
 import com.hmdp.utils.RedisIdWorker;
 import com.hmdp.utils.UserHolder;
 import javafx.application.Application;
@@ -58,6 +63,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     private StringRedisTemplate stringRedisTemplate;
     @Resource
     private RedissonClient redissonClient;
+    @Resource
+    private MQClient mqClient;
 
     /**
      * 直接注入拿到代理bean
@@ -80,7 +87,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      */
     @PostConstruct
     public void init() {
-        SECKILL_ORDER_EXECUTOR.submit(new VoucherOrderHandler());
+        //SECKILL_ORDER_EXECUTOR.submit(new VoucherOrderHandler());
     }
 
     /**
@@ -185,7 +192,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      *
      * @param voucherOrder
      */
-    private void handlerVoucherOrder(VoucherOrder voucherOrder) {
+    @Override
+    public void handlerVoucherOrder(VoucherOrder voucherOrder) {
         //1.获取用户id
         Long userId = voucherOrder.getUserId();
         //2.创建锁对象
@@ -231,11 +239,35 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             //2.1.不为零
             return Result.fail(SeckillResultEnum.getMessageByResult(r));
         }
+        //3.发送消息
+        //proxy = (IVoucherOrderService) AopContext.currentProxy();
+        SeckillOrderDTO seckillOrder = new SeckillOrderDTO(orderId, voucherId, userId);
+        mqClient.sendMsg(seckillOrder, SeckillOrderMQConstants.SECKILL_ORDER_CREATE_FANOUT_EXCHANGE, "");
+        //4.为零返回订单号
+        return Result.ok(orderId);
+    }
+
+    /*@Override
+    public Result seckillVoucher(Long voucherId) {
+        Long userId = UserHolder.getUser().getId();
+        long orderId = redisIdWorker.nextId("order:voucher");
+        long nowTime = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
+        //1.执行lua脚本
+        Long result = stringRedisTemplate
+                .execute(SECKILL_SCRIPT,
+                        Collections.emptyList(),
+                        voucherId.toString(), userId.toString(), String.valueOf(orderId),String.valueOf(nowTime));
+        int r = Objects.requireNonNull(result).intValue();
+        //2.判断结果是否为0
+        if (r != 0) {
+            //2.1.不为零
+            return Result.fail(SeckillResultEnum.getMessageByResult(r));
+        }
         //3.获取 Aop 代理类，防止事务失效
         //proxy = (IVoucherOrderService) AopContext.currentProxy();
         //4.为零返回订单号
         return Result.ok(orderId);
-    }
+    }*/
 
 
     /*@Override

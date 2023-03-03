@@ -25,6 +25,19 @@ spring:
 
   jackson:
     default-property-inclusion: non_null # JSON处理时忽略非空字段
+
+  rabbitmq:
+    password: guest
+    username: guest
+    host: ${redis.host}
+    port: 5672
+    virtual-host: /
+    publisher-returns: true
+    publisher-confirm-type: correlated
+    listener:
+      simple:
+        acknowledge-mode: manual
+
 mybatis-plus:
   type-aliases-package: com.hmdp.entity # 别名扫描包
 logging:

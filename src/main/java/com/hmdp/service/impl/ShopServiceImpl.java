@@ -1,6 +1,5 @@
 package com.hmdp.service.impl;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -27,8 +26,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import static com.hmdp.utils.RedisConstants.*;
-import static com.hmdp.utils.SystemConstants.DEFAULT_PAGE_SIZE;
+import static com.hmdp.constants.RedisConstants.*;
+import static com.hmdp.constants.SystemConstants.DEFAULT_PAGE_SIZE;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 

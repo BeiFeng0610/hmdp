@@ -13,10 +13,9 @@ import java.time.LocalDateTime;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
-import static com.hmdp.utils.RedisConstants.*;
+import static com.hmdp.constants.RedisConstants.*;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 

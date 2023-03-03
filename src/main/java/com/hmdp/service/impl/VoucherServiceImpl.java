@@ -15,7 +15,7 @@ import javax.annotation.Resource;
 import java.time.ZoneOffset;
 import java.util.List;
 
-import static com.hmdp.utils.RedisConstants.*;
+import static com.hmdp.constants.RedisConstants.*;
 
 /**
  * <p>

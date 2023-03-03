@@ -1,26 +1,26 @@
 package com.hmdp;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.lang.UUID;
-import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.hmdp.dto.Result;
 import com.hmdp.dto.UserDTO;
-import com.hmdp.entity.Follow;
 import com.hmdp.entity.Shop;
+import com.hmdp.entity.User;
 import com.hmdp.mapper.FollowMapper;
 import com.hmdp.service.IFollowService;
 import com.hmdp.service.IUserService;
-import com.hmdp.service.impl.FollowServiceImpl;
 import com.hmdp.service.impl.ShopServiceImpl;
 import com.hmdp.utils.CacheClient;
 import com.hmdp.utils.RedisIdWorker;
+import com.hmdp.utils.RegexUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.geo.Point;
 import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.domain.geo.GeoLocation;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -30,7 +30,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.hmdp.utils.RedisConstants.*;
+import static com.hmdp.constants.RedisConstants.*;
 
 @SpringBootTest
 class HmDianPingApplicationTests {
@@ -182,5 +182,27 @@ class HmDianPingApplicationTests {
         long end = System.currentTimeMillis();
         System.out.println(end - start + "ms");
         users.forEach(System.out::println);
+    }
+
+    @Test
+    void batchInToken(){
+        for (int i = 1; i <= 999; i++) {
+            User user = new User();
+            user.setId(10000L + i);
+            user.setNickName(i + "号机");
+            user.setPhone("13033976" + i);
+
+            UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
+            Map<String, Object> userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
+                    CopyOptions.create()
+                            .setIgnoreNullValue(true)
+                            .setFieldValueEditor((key, value) -> value.toString()));
+            // 5.2.生成随机token
+            String token = UUID.randomUUID().toString(true);
+            // 5.3.存入redis
+            String tokenKey = LOGIN_USER_KEY + token;
+            System.out.println(token);
+            stringRedisTemplate.opsForHash().putAll(tokenKey, userMap);
+        }
     }
 }

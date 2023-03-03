@@ -16,21 +16,18 @@ import com.hmdp.mapper.BlogMapper;
 import com.hmdp.service.IBlogService;
 import com.hmdp.service.IFollowService;
 import com.hmdp.service.IUserService;
-import com.hmdp.utils.SystemConstants;
+import com.hmdp.constants.SystemConstants;
 import com.hmdp.utils.UserHolder;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.hmdp.utils.RedisConstants.BLOG_LIKED_KEY;
-import static com.hmdp.utils.RedisConstants.FEED_KEY;
-import static com.hmdp.utils.SystemConstants.DEFAULT_PAGE_SIZE;
+import static com.hmdp.constants.RedisConstants.BLOG_LIKED_KEY;
+import static com.hmdp.constants.RedisConstants.FEED_KEY;
 
 /**
  * <p>

@@ -13,8 +13,8 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.List;
 
-import static com.hmdp.utils.RedisConstants.CACHE_SHOP_TYPE_LIST_KEY;
-import static com.hmdp.utils.RedisConstants.CACHE_SHOP_TYPE_LIST_TTL;
+import static com.hmdp.constants.RedisConstants.CACHE_SHOP_TYPE_LIST_KEY;
+import static com.hmdp.constants.RedisConstants.CACHE_SHOP_TYPE_LIST_TTL;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 /**

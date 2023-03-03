@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.hmdp.utils.RedisConstants.FOLLOWS_KEY;
+import static com.hmdp.constants.RedisConstants.FOLLOWS_KEY;
 
 /**
  * <p>
