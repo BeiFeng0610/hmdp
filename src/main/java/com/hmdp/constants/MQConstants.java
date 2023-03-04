@@ -3,7 +3,7 @@ package com.hmdp.constants;
 /**
  * @author 16116
  */
-public abstract class SeckillOrderMQConstants {
+public abstract class MQConstants {
     /**
      * 生成秒杀订单交换机
      */

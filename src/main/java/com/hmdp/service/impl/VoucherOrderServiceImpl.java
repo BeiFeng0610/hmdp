@@ -1,12 +1,9 @@
 package com.hmdp.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.util.RandomUtil;
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.hmdp.constants.SeckillOrderMQConstants;
+import com.hmdp.constants.MQConstants;
 import com.hmdp.dto.Result;
 import com.hmdp.dto.SeckillOrderDTO;
 import com.hmdp.entity.VoucherOrder;
@@ -17,13 +14,9 @@ import com.hmdp.service.IVoucherOrderService;
 import com.hmdp.utils.MQClient;
 import com.hmdp.utils.RedisIdWorker;
 import com.hmdp.utils.UserHolder;
-import javafx.application.Application;
-import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.core.ApplicationContext;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.stream.*;
@@ -32,7 +25,6 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -75,20 +67,20 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     /**
      * 从 ThreadLocal 获取IVoucherOrderService代理对象
      */
-    private IVoucherOrderService proxy;
+    //private IVoucherOrderService proxy;
 
     /**
      * 秒杀订单线程池
      */
-    private static final ExecutorService SECKILL_ORDER_EXECUTOR = Executors.newSingleThreadExecutor();
+    //private static final ExecutorService SECKILL_ORDER_EXECUTOR = Executors.newSingleThreadExecutor();
 
     /**
      * 初始化时提交任务
      */
-    @PostConstruct
+    /*@PostConstruct
     public void init() {
-        //SECKILL_ORDER_EXECUTOR.submit(new VoucherOrderHandler());
-    }
+        SECKILL_ORDER_EXECUTOR.submit(new VoucherOrderHandler());
+    }*/
 
     /**
      * 秒杀任务处理
@@ -242,7 +234,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         //3.发送消息
         //proxy = (IVoucherOrderService) AopContext.currentProxy();
         SeckillOrderDTO seckillOrder = new SeckillOrderDTO(orderId, voucherId, userId);
-        mqClient.sendMsg(seckillOrder, SeckillOrderMQConstants.SECKILL_ORDER_CREATE_FANOUT_EXCHANGE, "");
+        mqClient.sendMsg(seckillOrder, MQConstants.SECKILL_ORDER_CREATE_FANOUT_EXCHANGE, "");
         //4.为零返回订单号
         return Result.ok(orderId);
     }

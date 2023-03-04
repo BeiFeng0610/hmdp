@@ -1,8 +1,7 @@
 package com.hmdp.receiver;
 
 import cn.hutool.json.JSONUtil;
-import com.hmdp.constants.SeckillOrderMQConstants;
-import com.hmdp.dto.SeckillOrderDTO;
+import com.hmdp.constants.MQConstants;
 import com.hmdp.entity.VoucherOrder;
 import com.hmdp.service.IVoucherOrderService;
 import com.rabbitmq.client.Channel;
@@ -16,32 +15,40 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * @author 16116
  */
 @Component
-public class SeckillOrderReceiver {
+public class SeckillOrderReceiver implements RabbitBaseConsumer {
 
     @Resource
     private IVoucherOrderService voucherOrderService;
 
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = SeckillOrderMQConstants.SECKILL_ORDER_CREATE_QUEUE, durable = "true", autoDelete = "false"),
-            exchange = @Exchange(value = SeckillOrderMQConstants.SECKILL_ORDER_CREATE_FANOUT_EXCHANGE, type = ExchangeTypes.FANOUT),
+            value = @Queue(value = MQConstants.SECKILL_ORDER_CREATE_QUEUE, durable = "true", autoDelete = "false"),
+            exchange = @Exchange(value = MQConstants.SECKILL_ORDER_CREATE_FANOUT_EXCHANGE, type = ExchangeTypes.FANOUT),
             key = ""
     ))
     public void process(Message message, Channel channel) throws IOException {
         long tag = message.getMessageProperties().getDeliveryTag();
         try {
-            VoucherOrder order = JSONUtil.toBean(new String(message.getBody()), VoucherOrder.class);
-            voucherOrderService.handlerVoucherOrder(order);
+            doExecute(new String(message.getBody()));
             channel.basicAck(tag, false);
         } catch (Exception e) {
             channel.basicNack(tag, false, true);
         }
 
+    }
+
+    @Override
+    public void doExecute(String msg) {
+        VoucherOrder order = JSONUtil.toBean(msg, VoucherOrder.class);
+        voucherOrderService.handlerVoucherOrder(order);
+    }
+
+    @Override
+    public String getExchange() {
+        return MQConstants.SECKILL_ORDER_CREATE_FANOUT_EXCHANGE;
     }
 }
